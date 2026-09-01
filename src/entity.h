@@ -37,7 +37,16 @@ struct ENTITY_tag {
     unsigned codepoints[2];
 };
 
+// CSPro: added so that entity_lookup is exported
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 const ENTITY* entity_lookup(const char* name, size_t name_size);
+
+#ifdef __cplusplus
+    }  /* extern "C" { */
+#endif
 
 
 #endif  /* MD4C_ENTITY_H */
