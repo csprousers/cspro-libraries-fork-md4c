@@ -19,7 +19,7 @@ The following resources can explain more if you are unfamiliar with it:
 
 ## What is MD4C
 
-MD4C is Markdown parser implementation in C, with the following features:
+MD4C is a Markdown parser implementation in C, with the following features:
 
 * **Compliance:** Generally, MD4C aims to be compliant to the latest version of
   [CommonMark specification](http://spec.commonmark.org/). Currently, we are
@@ -138,7 +138,7 @@ disabled with the following flags:
 The CommonMark specification declares that any sequence of Unicode code points
 is a valid CommonMark document.
 
-But, under a closer inspection, Unicode plays any role in few very specific
+But, under a closer inspection, Unicode plays a role in few very specific
 situations when parsing Markdown documents:
 
 1. For detection of word boundaries when processing emphasis and strong
@@ -151,7 +151,7 @@ situations when parsing Markdown documents:
 3. For translating HTML entities (e.g. `&amp;`) and numeric character
    references (e.g. `&#35;` or `&#xcab;`) into their Unicode equivalents.
 
-   However note MD4C leaves this translation on the renderer/application; as
+   However, note MD4C leaves this translation on the renderer/application; as
    the renderer is supposed to really know output encoding and whether it
    really needs to perform this kind of translation. (For example, when the
    renderer outputs HTML, it may leave the entities untranslated and defer the
@@ -200,8 +200,8 @@ preprocessor macros (as specified at the time MD4C is being built):
 The API of the parser is quite well documented in the comments in the `md4c.h`.
 Similarly, the markdown-to-html API is described in its header `md4c-html.h`.
 
-There is also [project wiki](http://github.com/mity/md4c/wiki) which provides
-some more comprehensive documentation. However note it is incomplete and some
+There is also a [project wiki](http://github.com/mity/md4c/wiki) which provides
+some more comprehensive documentation. However, note it is incomplete and some
 details may be somewhat outdated.
 
 
@@ -219,21 +219,21 @@ language) are full DOM-like parsers: They construct abstract syntax tree (AST)
 representation of the whole Markdown document. That takes time and it leads to
 bigger memory footprint.
 
-Build AST is completely fine as long as you really need it. If you don't need
-it, there is a very high chance that using MD4C will be substantially faster
-and less hungry in terms of memory consumption.
+Building AST is completely fine as long as you need it. If you don't, there is
+a very high chance that using MD4C will be substantially faster and less hungry
+in terms of memory consumption.
 
 Last but not least, some Markdown parsers are implemented in a naive way. When
-fed with a [smartly crafted input pattern](test/pathological_tests.py), they
+fed with a [smartly crafted input pattern](test/pathological-tests.py), they
 may exhibit quadratic (or even worse) parsing times. What MD4C can still parse
 in a fraction of second may turn into long minutes or possibly hours with them.
 Hence, when such a naive parser is used to process an input from an untrusted
 source, the possibility of denial-of-service attacks becomes a real danger.
 
-A lot of our effort went into providing linear parsing times no matter what
-kind of crazy input MD4C parser is fed with. (If you encounter an input pattern
-which leads to a sub-linear parsing times, please do not hesitate and report it
-as a bug.)
+A lot of our effort went into providing linear or near-linear parsing times, no
+matter what kind of crazy input MD4C parser is fed with. (If you encounter an
+input pattern which leads to a sub-linear parsing times, please do not hesitate
+and report it as a bug.)
 
 **Q: Does MD4C perform any input validation?**
 
@@ -253,8 +253,25 @@ ill-formed UTF-8 byte sequence will propagate to the respective callback as
 a part of the text.
 
 If you need to validate that the input is, say, a well-formed UTF-8 document,
-you have to do it on your own. The easiest way how to do this is to simply
-validate the whole document before passing it to the MD4C parser.
+you have to do it on your own. The easiest way to do this is to simply validate
+the whole document before passing it to the MD4C parser.
+
+**Q: MD4C does not work with zero-terminated strings. Why?**
+
+**A:** There are two reasons: correctness and performance.
+
+Markdown documents can legally contain `U+0000` character (which in UTF-8 is
+encoded as a zero byte) and we need to be able dealing with such input to comply
+to the CommonMark specification.
+
+As for performance, for adding the zero terminator after every chunk of text
+before passing to the application callback, we'd have to copy every such string
+internally into a temporary buffer. This means we'd be essentially doing, bit
+by bit, an extra copy of the whole document's contents.
+
+To avoid such slowdown, whenever it's reasonably possible the parser passes the
+callback directly pointer pointing into the right place in the input document,
+together with length of the text the callback is expected to process.
 
 
 ## License
@@ -272,16 +289,32 @@ Ports and bindings to other languages:
 * [markdown-wasm](https://github.com/rsms/markdown-wasm):
   Port of MD4C to WebAssembly.
 
+* [md4lean](https://github.com/acmepjz/md4lean):
+  [Lean](https://lean-lang.org/) bindings for MD4C.
+
+* [PECL MD4C](https://pecl.php.net/package/md4c):
+  PHP bindings for MD4C.
+
 * [PyMD4C](https://github.com/dominickpastore/pymd4c):
-  Python bindings for MD4C
+  Python bindings for MD4C.
+
 
 Software using MD4C:
 
 * [imgui_md](https://github.com/mekhontsev/imgui_md):
-  Markdown renderer for [Dear ImGui](https://github.com/ocornut/imgui)
+  Markdown renderer for [Dear ImGui](https://github.com/ocornut/imgui).
+
+* [LibreOffice](https://www.libreoffice.org/):
+  An open source office suite.
+
+* [lnav](https://lnav.org/):
+  A log file viewer for the terminal that can also render markdown.
 
 * [MarkDown Monolith Assembler](https://github.com/1Hyena/mdma):
   A command line tool for building browser-based books.
+
+* [Mdview MTX](https://github.com/step-/mdview):
+  GTK markdown viewer and CLI converter.
 
 * [QOwnNotes](https://www.qownnotes.org/):
   A plain-text file notepad and todo-list manager with markdown support and

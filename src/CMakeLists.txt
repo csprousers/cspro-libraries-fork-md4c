@@ -1,18 +1,24 @@
-
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG")
 
+# Handle absolute include and lib dirs outside of CMAKE_INSTALL_PREFIX
+include(JoinPaths.cmake) # can be replaced by cmake_path(APPEND) in CMake 3.20
+join_paths(PKGCONFIG_INCLUDEDIR "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+join_paths(PKGCONFIG_LIBDIR "\${prefix}" "${CMAKE_INSTALL_LIBDIR}")
 
-# Build rules for MD4C parser library
+# Build rules for MD4C parser and HTML renderer library
 
 configure_file(md4c.pc.in md4c.pc @ONLY)
 # for CSPro ... building everything as one library
 # add_library(md4c md4c.c md4c.h)
 add_library(md4c md4c.c md4c.h md4c-html.c md4c-html.h entity.c entity.h)
+target_include_directories(md4c PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+target_compile_definitions(md4c PRIVATE "$<$<CONFIG:Debug>:DEBUG>")
 set_target_properties(md4c PROPERTIES
-    COMPILE_FLAGS "-DMD4C_USE_UTF8"
-    VERSION ${MD_VERSION}
-    SOVERSION ${MD_VERSION_MAJOR}
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
     PUBLIC_HEADER "md4c.h;md4c-html.h;entity.h"
 )
 
@@ -25,5 +31,4 @@ install(
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/md4c
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
